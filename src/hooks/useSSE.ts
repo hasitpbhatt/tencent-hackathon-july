@@ -3,7 +3,7 @@ import type { SSEEvent } from '../types';
 
 // ── localStorage history management ──
 
-const HISTORY_KEY = 'crewai-planner-history';
+const HISTORY_KEY = 'shipkit-history';
 
 export interface HistoryItem {
   id: string;
@@ -35,7 +35,7 @@ export async function removeHistory(id: string) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'makers-conversation-id': crypto.randomUUID(),
+        'makers-conversation-id': id,
       },
       body: JSON.stringify({ conversationId: id }),
     });
@@ -134,15 +134,15 @@ export function useSSE(onEvent: (event: SSEEvent) => void) {
     conversationIdRef.current = targetId;
     window.history.replaceState(null, '', '?id=' + targetId);
 
-    try {
-      const res = await fetch('/history', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'makers-conversation-id': crypto.randomUUID(),
-        },
-        body: JSON.stringify({ conversationId: targetId }),
-      });
+  try {
+    const res = await fetch('/history', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'makers-conversation-id': targetId,
+      },
+      body: JSON.stringify({ conversationId: targetId }),
+    });
       if (!res.ok) {
         throw new Error(`HTTP ${res.status}`);
       }
