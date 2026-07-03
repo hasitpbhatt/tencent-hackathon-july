@@ -79,8 +79,8 @@ export function FlowTimeline({ phases }: Props) {
                       left: '-100%',
                       width: '100%',
                       height: '100%',
-                      background: `linear-gradient(90deg, transparent, ${meta.color}, transparent)`,
-                      animation: 'connector-flow 1.5s infinite',
+          background: `linear-gradient(90deg, transparent, ${meta.color}, transparent)`,
+          animation: 'connector-flow 2s infinite ease-in-out',
                     }}
                   />
                 )}
