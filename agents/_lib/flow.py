@@ -30,13 +30,14 @@ logger = create_logger("flow")
 PM_MAX_ROUNDS = 3
 
 class TurnState(BaseModel):
-    id: str = ""  # Set to conversation_id via kickoff(inputs={"id": cid})
+    id: str = "" # Set to conversation_id via kickoff(inputs={"id": cid})
     product_name: str = ""
     locale: str = "English"
     qa_history: str = ""
     rounds: int = 0
     latest_prd: str = ""
     latest_spec: str = ""
+    latest_design: str = ""
     chat_history: str = ""
     # Internal flag (private attr, not persisted)
     _pm_ready: bool = False
@@ -93,25 +94,26 @@ class TurnFlow(Flow[TurnState]):
         provider=PROVIDER,
     )
     def write_step(self):
-        """PM+TL produce PRD and Tech Spec. Flow pauses for user feedback."""
+        """PM+TL+Designer produce PRD, Tech Spec, and Design Spec. Flow pauses for user feedback."""
         s = self.state
         result = PlanningCrew().crew().kickoff(inputs={
             "product_name": s.product_name,
             "qa_history": s.qa_history,
             "existing_prd": "",
             "existing_spec": "",
+            "existing_design": "",
             "iterate_feedback": "",
             "locale": s.locale,
         })
-        # Store both documents separately for iterate phase.
-        if hasattr(result, "tasks_output") and len(result.tasks_output) >= 2:
+        if hasattr(result, "tasks_output") and len(result.tasks_output) >= 3:
             s.latest_prd = str(result.tasks_output[0].raw or "").strip()
             s.latest_spec = str(result.tasks_output[1].raw or "").strip()
+            s.latest_design = str(result.tasks_output[2].raw or "").strip()
         else:
             s.latest_prd = _crew_text(result)
             s.latest_spec = ""
-        # Return both for display (separated by marker for handler to split).
-        return f"{s.latest_prd}\n[SPLIT]\n{s.latest_spec}"
+            s.latest_design = ""
+        return f"{s.latest_prd}\n[SPLIT_PR]\n{s.latest_spec}\n[SPLIT_DESIGN]\n{s.latest_design}"
 
     # ── Iterate phase: user gives feedback, PM+TL respond ──
 
@@ -121,7 +123,7 @@ class TurnFlow(Flow[TurnState]):
         provider=PROVIDER,
     )
     def iterate_step(self):
-        """PM responds to feedback, TL supplements. Flow pauses for next round."""
+        """PM responds to feedback, TL supplements, Designer supplements. Flow pauses for next round."""
         s = self.state
         user_msg = ""
         if self.last_human_feedback:
@@ -131,30 +133,40 @@ class TurnFlow(Flow[TurnState]):
             "product_name": s.product_name,
             "latest_prd": s.latest_prd or "(none)",
             "latest_spec": s.latest_spec or "(none)",
+            "latest_design": s.latest_design or "(none)",
             "chat_history": s.chat_history,
             "user_message": user_msg,
             "locale": s.locale,
         })
 
         # Record PM and TL answers in chat_history (not Reviewer's suggestions)
-        if hasattr(output, "tasks_output") and len(output.tasks_output) >= 2:
+        if hasattr(output, "tasks_output") and len(output.tasks_output) >= 3:
             pm_response = str(output.tasks_output[0].raw or "").strip()
             tl_response = str(output.tasks_output[1].raw or "").strip()
+            designer_response = str(output.tasks_output[2].raw or "").strip()
+        elif hasattr(output, "tasks_output") and len(output.tasks_output) >= 2:
+            pm_response = str(output.tasks_output[0].raw or "").strip()
+            tl_response = str(output.tasks_output[1].raw or "").strip()
+            designer_response = ""
         elif hasattr(output, "tasks_output") and len(output.tasks_output) >= 1:
             pm_response = str(output.tasks_output[0].raw or "").strip()
             tl_response = ""
+            designer_response = ""
         else:
             pm_response = _crew_text(output)
             tl_response = ""
+            designer_response = ""
 
         # Update chat history.
         if user_msg:
-            history_entry = f"\nBoss: {user_msg}\nPM: {pm_response}"
+                    history_entry = f"\nUser: {user_msg}\nPM: {pm_response}"
             if tl_response and tl_response.lower() not in ("n/a", "无补充"):
                 history_entry += f"\nTL: {tl_response}"
+            if designer_response and designer_response.lower() not in ("n/a", "无补充"):
+                history_entry += f"\nDesigner: {designer_response}"
             s.chat_history = (s.chat_history + history_entry).strip()
 
-        return _crew_text(output)  # → shown to user, then Flow pauses
+        return _crew_text(output) # → shown to user, then Flow pauses
 
     @router(iterate_step)
     def after_iterate(self):
@@ -170,13 +182,14 @@ class TurnFlow(Flow[TurnState]):
 
     @listen("finalize")
     def finalize_step(self):
-        """PM outputs final PRD, TL outputs final Spec. No @human_feedback → Flow completes."""
+        """PM outputs final PRD, TL outputs final Spec, Designer outputs final Design Spec. Flow completes."""
         s = self.state
         output = PlanningCrew().crew().kickoff(inputs={
             "product_name": s.product_name,
             "qa_history": s.qa_history,
             "existing_prd": f"--- Current PRD (revise into final version incorporating all feedback) ---\n{s.latest_prd}" if s.latest_prd else "",
             "existing_spec": f"--- Current Tech Spec (revise into final version incorporating all feedback) ---\n{s.latest_spec}" if s.latest_spec else "",
+            "existing_design": f"--- Current Design Spec (revise into final version incorporating all feedback) ---\n{s.latest_design}" if s.latest_design else "",
             "iterate_feedback": f"--- Iteration feedback (ALL items below MUST be incorporated into the final version) ---\n{s.chat_history}\n\nIMPORTANT: Every single feedback item above must be reflected in the final document. Do not skip any. This is the FINAL version." if s.chat_history else "",
             "locale": s.locale,
         })

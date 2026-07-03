@@ -1,16 +1,16 @@
-# CrewAI Product Planner
+# ShipKit
 
-> A multi-agent product planning assistant built with CrewAI on EdgeOne Makers — a PM, Tech Lead, and Reviewer collaborate to turn your product idea into a PRD and Tech Spec through interactive Q&A.
+> A multi-agent product planning assistant built with CrewAI on EdgeOne Makers — a PM, Tech Lead, Designer, and Reviewer collaborate to turn your product idea into a PRD, Tech Spec, and Design Spec through interactive Q&A.
 
-**Framework:** CrewAI · **Category:** Quick Start · **Language:** Python
+**Framework:** CrewAI · **Language:** Python
 
-[![Deploy to EdgeOne Makers](https://cdnstatic.tencentcs.com/edgeone/pages/deploy.svg)](https://edgeone.ai/makers/new?template=crewai-product-planner-starter&from=within&fromAgent=1&agentLang=python)
+[![Deploy to EdgeOne Makers](https://cdnstatic.tencentcs.com/edgeone/pages/deploy.svg)](https://edgeone.ai/makers/new?template=shipkit-planner&from=within&fromAgent=1&agentLang=python)
 
 ## Overview
 
-CrewAI Product Planner simulates a product team: a Product Manager interviews you to gather requirements, then collaborates with a Tech Lead to produce a PRD and Technical Specification. A Reviewer provides improvement suggestions at each stage. The entire process is conversational — you guide the direction through multiple-choice options or free-text input.
+ShipKit simulates a product team: a Product Manager interviews you to gather requirements, then collaborates with a Tech Lead and Designer to produce a PRD, Technical Specification, and Design Spec. A Reviewer provides improvement suggestions at each stage. The entire process is conversational — you guide the direction through multiple-choice options or free-text input.
 
-- **Multi-agent orchestration** — three agents (PM, Tech Lead, Reviewer) with distinct roles working in sequence via CrewAI Flows
+- **Multi-agent orchestration** — four agents (PM, Tech Lead, Designer, Reviewer) with distinct roles working in sequence via CrewAI Flows
 - **Interactive Q&A** — the PM asks clarifying questions before drafting; you choose from options or type custom answers
 - **Iterative refinement** — after the initial draft, continue providing feedback until you're satisfied with the final documents
 - **Session persistence** — conversation state is recoverable across instances via external store sync

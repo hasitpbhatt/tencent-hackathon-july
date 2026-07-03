@@ -395,7 +395,7 @@ export default function App() {
             ⚡
           </div>
           <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)', letterSpacing: '-0.3px' }}>
-            CrewAI Product Planner
+            ShipKit
           </span>
           <div className="flex items-center gap-1.5" style={{ marginLeft: 4 }}>
             <div

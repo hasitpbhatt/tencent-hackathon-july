@@ -1,10 +1,10 @@
-# CrewAI 产品规划助手
+# SHIP 产品规划助手
 
-> 基于 CrewAI 构建的多 Agent 产品规划助手，部署在 EdgeOne Makers 上。产品经理、技术主管和评审员协作，通过交互式问答将你的产品想法转化为 PRD 和技术方案。
+> 基于 CrewAI 构建的多 Agent 产品规划助手，部署在 EdgeOne Makers 上。产品经理、技术主管、设计师和评审员协作，通过交互式问答将你的产品想法转化为 PRD、技术方案和设计规范。
 
-**Framework:** CrewAI · **Category:** Quick Start · **Language:** Python
+**Framework:** CrewAI · **Language:** Python
 
-[![Deploy to EdgeOne Makers](https://cdnstatic.tencentcs.com/edgeone/pages/deploy.svg)](https://console.cloud.tencent.com/edgeone/makers/new?template=crewai-product-planner-starter&from=within&fromAgent=1&agentLang=python)
+[![Deploy to EdgeOne Makers](https://cdnstatic.tencentcs.com/edgeone/pages/deploy.svg)](https://console.cloud.tencent.com/edgeone/makers/new?template=shipkit-planner&from=within&fromAgent=1&agentLang=python)
 
 ## 概览
 

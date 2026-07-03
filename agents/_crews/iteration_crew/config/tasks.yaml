@@ -1,6 +1,6 @@
 chat_respond:
   description: >
-    You are the Senior Product Manager. The Boss gave feedback on the
+    You are the Senior Product Manager. The user gave feedback on the
     product plan. Evaluate the feedback and state your modification plan.
 
     Product: {product_name}
@@ -11,7 +11,7 @@ chat_respond:
     [Discussion history]:
     {chat_history}
 
-    Boss's feedback: "{user_message}"
+    User's feedback: "{user_message}"
 
     Respond in 3-5 sentences as a natural paragraph. Cover these aspects:
     1. What you will change in the PRD
@@ -35,7 +35,7 @@ chat_tech_supplement:
     [Reference — current Tech Spec, do NOT reproduce]:
     {latest_spec}
 
-    Boss said: "{user_message}"
+    User said: "{user_message}"
 
     Add 1-2 sentences of technical perspective — feasibility, risk,
     or trade-off. Do NOT output a full Tech Spec or structured document.
@@ -48,8 +48,8 @@ chat_tech_supplement:
 
 iterate_review:
   description: >
-    You are the Product Reviewer. Read the PM and TL responses above
-    (provided via context).
+    You are the Product Reviewer. Read the PM, TL, and Designer responses
+    above (provided via context).
 
     Product: {product_name}
 
@@ -62,10 +62,10 @@ iterate_review:
     [Discussion history]:
     {chat_history}
 
-    Boss said: "{user_message}"
+    User said: "{user_message}"
 
     Based on the current PRD, Tech Spec, and discussion, suggest 2-3
-    actionable next directions for the Boss. Each suggestion should be
+    actionable next directions for the user. Each suggestion should be
     specific and tied to concrete PRD/Spec improvements.
 
     IMPORTANT: Do NOT repeat suggestions that have already been discussed
@@ -82,3 +82,25 @@ iterate_review:
     You MUST respond in {locale}.
   expected_output: >
     2-3 suggestions in A/B/C format, each on a separate line.
+
+chat_design_supplement:
+  description: >
+    You are the Product Designer. The PM just described a proposed change.
+    Read the PM's answer (in context above) and provide design input.
+
+    Product: {product_name}
+
+    [Reference — current Design Spec, do NOT reproduce]:
+    {latest_design}
+
+    User said: "{user_message}"
+
+    Add 1-2 sentences of design perspective — UX implications, visual
+    trade-offs, or interaction considerations. Do NOT output a full
+    Design Spec or structured document.
+
+    If there's nothing meaningful to add, respond with "N/A".
+
+    You MUST respond in {locale}.
+  expected_output: >
+    1-2 sentences of design commentary, or "N/A".

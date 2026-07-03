@@ -15,6 +15,7 @@ interface Props {
 const AVATAR_STYLES: Record<string, { bg: string; border: string }> = {
   'Senior Product Manager': { bg: 'var(--agent-pm-bg)', border: 'var(--agent-pm-border)' },
   'Senior Tech Lead': { bg: 'var(--agent-dev-bg)', border: 'var(--agent-dev-border)' },
+  'Product Designer': { bg: 'var(--agent-des-bg)', border: 'var(--agent-des-border)' },
 };
 
 export function ChatMessage({ agent, status, content }: Props) {

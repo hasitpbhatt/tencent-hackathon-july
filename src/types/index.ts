@@ -38,6 +38,12 @@ export const AGENT_CONFIG: Record<string, AgentConfig> = {
     crewTagKey: 'crew.tl.tag',
     shortNameKey: 'agent.dev',
   },
+  'Product Designer': {
+    avatar: '🎨',
+    color: 'var(--agent-des)',
+    crewTagKey: 'crew.des.tag',
+    shortNameKey: 'agent.des',
+  },
 };
 
 // --- App State ---

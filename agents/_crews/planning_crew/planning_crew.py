@@ -7,10 +7,11 @@ from agents._lib.llm import get_llm
 
 @CrewBase
 class PlanningCrew:
-    """Three-agent document generation: PM writes PRD → TL writes Tech Spec → Reviewer suggests.
+    """Four-agent document generation: PM writes PRD → TL writes Tech Spec
+    → Designer writes Design Spec → Reviewer suggests.
 
-    TL reads the PRD via Task.context; Reviewer reads both PRD and Spec
-    via Task.context and suggests improvement directions.
+    TL reads PRD via Task.context; Designer reads PRD + Tech Spec;
+    Reviewer reads all three via Task.context and suggests improvements.
     """
 
     agents: list[BaseAgent]
@@ -31,6 +32,14 @@ class PlanningCrew:
     def tech_lead(self) -> Agent:
         return Agent(
             config=self.agents_config["tech_lead"],
+            llm=get_llm(),
+            memory=False,
+        )
+
+    @agent
+    def designer(self) -> Agent:
+        return Agent(
+            config=self.agents_config["designer"],
             llm=get_llm(),
             memory=False,
         )
@@ -61,12 +70,21 @@ class PlanningCrew:
         )
 
     @task
+    def write_design(self) -> Task:
+        """Designer reads PRD + Tech Spec (via context) and writes Design Spec."""
+        return Task(
+            config=self.tasks_config["designer_write_spec"],
+            agent=self.designer(),
+            context=[self.write_prd(), self.write_spec()],
+        )
+
+    @task
     def review_suggest(self) -> Task:
-        """Reviewer reads PRD + Spec and suggests next actions."""
+        """Reviewer reads all three documents and suggests next actions."""
         return Task(
             config=self.tasks_config["review_suggest"],
             agent=self.reviewer(),
-            context=[self.write_prd(), self.write_spec()],
+            context=[self.write_prd(), self.write_spec(), self.write_design()],
         )
 
     @crew
@@ -75,5 +93,5 @@ class PlanningCrew:
             agents=self.agents,
             tasks=self.tasks,
             process=Process.sequential,
-            verbose=True,  # Set to True for debugging
+            verbose=True, # Set to True for debugging
         )

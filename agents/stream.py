@@ -60,6 +60,9 @@ async def _stream_resume(flow, feedback: str) -> FlowStreamingOutput:
     return streaming
 
 
+HIDDEN_AGENTS = {"Product Reviewer", "Product Designer"}
+
+
 async def handler(context):
     """POST /stream — conversation turn (streaming)."""
 
@@ -109,7 +112,7 @@ async def handler(context):
 
                 flow = TurnFlow.from_pending(cid, persistence=persistence)
 
-                if pending_state.get("latest_prd"):
+                if pending_state.get("latest_prd") or pending_state.get("latest_design"):
                     yield context.utils.sse({"type": "phase", "phase": "iterate"})
                 elif pending_state.get("_pm_ready") or pending_state.get("rounds", 0) >= 3:
                     yield context.utils.sse({"type": "phase", "phase": "draft"})
@@ -134,43 +137,50 @@ async def handler(context):
 
             # ── Shared streaming loop ──
             prev_agent = ""
-            current_content = ""
+            current_content_buffer: list[str] = []
             agent_contents: list[str] = []
-            HIDDEN_AGENT = "Product Reviewer"
+            # Write-step multi-doc tracking: accumulate hidden agent text
+            write_buffers: dict[str, str] = {}
+            write_hidden_last: str = ""
 
-            async for chunk in streaming:
+            def _flush_prev_agent():
+                nonlocal prev_agent
+                if prev_agent and current_content_buffer:
+                    content = "".join(current_content_buffer)
+                    if prev_agent not in HIDDEN_AGENTS:
+                        agent_contents.append(content)
+                        fire_save("assistant", content, {"agent": prev_agent})
+                    else:
+                        write_buffers[prev_agent] = (write_buffers.get(prev_agent, "") + content).strip()
+                    current_content_buffer.clear()
+
+            for chunk in streaming:
                 agent_role = (chunk.agent_role or "").strip()
 
                 if agent_role and agent_role != prev_agent:
-                    if prev_agent and current_content:
-                        fire_save("assistant", current_content, {"agent": prev_agent})
-                        agent_contents.append(current_content)
-                        current_content = ""
-                    if prev_agent and prev_agent != HIDDEN_AGENT:
-                        yield context.utils.sse({"type": "agent_end", "agent": prev_agent})
-
-                    if agent_role != HIDDEN_AGENT:
-                        yield context.utils.sse({"type": "agent_start", "agent": agent_role})
+                    _flush_prev_agent()
                     prev_agent = agent_role
+                    if agent_role not in HIDDEN_AGENTS:
+                        yield context.utils.sse({"type": "agent_start", "agent": agent_role})
 
                 if chunk.chunk_type == StreamChunkType.TEXT:
                     text = chunk.content or ""
-                    current_content += text
-                    if agent_role != HIDDEN_AGENT:
+                    current_content_buffer.append(text)
+                    if agent_role and agent_role not in HIDDEN_AGENTS:
                         yield context.utils.sse({
                             "type": "chunk",
                             "agent": agent_role,
                             "content": text,
                         })
 
-            if prev_agent and current_content:
-                fire_save("assistant", current_content, {"agent": prev_agent})
-                agent_contents.append(current_content)
-            if prev_agent and prev_agent != HIDDEN_AGENT:
-                yield context.utils.sse({"type": "agent_end", "agent": prev_agent})
+            # Flush remaining buffer
+            _flush_prev_agent()
 
-            # ── Parse options: try from last agent backward ──
-            # Skip options if this was a finalize request.
+            # Save Designer's Design Spec if collected (hidden agent)
+            if "Product Designer" in write_buffers:
+                fire_save("assistant", write_buffers["Product Designer"], {"agent": "Product Designer"})
+
+            # ── Parse options from the last visible agent ──
             is_finalize = any(k in user_message for k in ("确认完成", "finalize", "looks good"))
             if not is_finalize:
                 options = None
@@ -206,7 +216,6 @@ def _parse_options(text: str) -> dict | None:
     import re
     choices = []
 
-    # Try line-based first (each option on its own line)
     for line in text.strip().split("\n"):
         match = re.match(r'^([A-D])\.\s*(.+)', line.strip())
         if match:
@@ -215,9 +224,7 @@ def _parse_options(text: str) -> dict | None:
     if choices:
         return {"choices": choices}
 
-    # Fallback: single-line format "A. xxx B. yyy C. zzz"
     parts = re.split(r'\s*\b([A-D])\.\s+', text.strip())
-    # After split: ['preamble', 'A', 'text_a', 'B', 'text_b', ...]
     i = 1
     while i + 1 < len(parts):
         key = parts[i]

@@ -20,13 +20,16 @@
   --accent-amber: #f5c842;
   --accent-red: #f07070;
 
-  /* Agent identity colors */
-  --agent-pm: #a78bfa;
-  --agent-pm-bg: rgba(167, 139, 250, 0.10);
-  --agent-pm-border: rgba(167, 139, 250, 0.22);
-  --agent-dev: #38bdf8;
-  --agent-dev-bg: rgba(56, 189, 248, 0.10);
-  --agent-dev-border: rgba(56, 189, 248, 0.22);
+/* Agent identity colors */
+--agent-pm: #a78bfa;
+--agent-pm-bg: rgba(167, 139, 250, 0.10);
+--agent-pm-border: rgba(167, 139, 250, 0.22);
+--agent-dev: #38bdf8;
+--agent-dev-bg: rgba(56, 189, 248, 0.10);
+--agent-dev-border: rgba(56, 189, 248, 0.22);
+--agent-des: #34d399;
+--agent-des-bg: rgba(52, 211, 153, 0.10);
+--agent-des-border: rgba(52, 211, 153, 0.22);
 
   /* Borders — slightly more visible */
   --border: #2a2b40;

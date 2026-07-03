@@ -30,8 +30,8 @@ pm_write_prd:
 
 tl_write_spec:
   description: >
-    You are the Senior Tech Lead. Based on the PRD above (provided via
-    context), write a focused Tech Spec for: {product_name}
+    You are the Senior Tech Lead. Based on the PRD and Design Spec above
+    (provided via context), write a focused Tech Spec for: {product_name}
 
     {existing_spec}
 
@@ -48,15 +48,41 @@ tl_write_spec:
   expected_output: >
     A structured Tech Spec document in markdown.
 
+designer_write_spec:
+  description: >
+    You are the Product Designer. Based on the PRD and Tech Spec above
+    (provided via context), write a concrete Design Spec for: {product_name}
+
+    {existing_design}
+
+    {iterate_feedback}
+
+    The Design Spec must include:
+    - Design overview (1 short paragraph: what the product looks and feels like)
+    - User flow diagram description (step-by-step journey through key screens)
+    - Screen inventory (list every major screen/page with a one-line purpose)
+    - Key UI components and patterns (navigation, forms, cards, buttons, etc.)
+    - Visual design guidelines (color palette rationale, typography, spacing system)
+    - Interaction notes (animations, transitions, loading states, error states)
+    - Accessibility requirements (key WCAG considerations for this product)
+    - Design token summary (CSS variable names + values for primary colors, spacing, etc.)
+
+    Be specific enough that a frontend engineer can implement without
+    additional design input. Use markdown headings. Reference the PRD
+    and Tech Spec where relevant but do NOT repeat their content.
+    You MUST respond in {locale}.
+  expected_output: >
+    A structured Design Spec document in markdown with all sections above.
+
 review_suggest:
   description: >
-    You are the Product Reviewer. Read the PRD and Tech Spec above
-    (provided via context) and suggest 2-3 actionable improvement
-    directions for the Boss to consider.
+    You are the Product Reviewer. Read the PRD, Tech Spec, and Design Spec
+    above (provided via context) and suggest 2-3 actionable improvement
+    directions for the user to consider.
 
     Each suggestion should be specific and actionable — e.g. "narrow
     feature scope to 3 core features", "add competitor analysis",
-    "clarify technical stack choices".
+    "clarify technical stack choices", "simplify the onboarding flow".
 
     Output ONLY the suggestions in this exact format, each on its own
     line (no other text, no numbering, no extra explanation):

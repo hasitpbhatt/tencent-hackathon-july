@@ -7,10 +7,11 @@ from agents._lib.llm import get_llm
 
 @CrewBase
 class IterationCrew:
-    """Three-agent iteration: PM answers, TL supplements, Reviewer suggests.
+    """Four-agent iteration: PM answers, TL supplements, Designer supplements,
+    Reviewer suggests.
 
-    Shows: @CrewBase, 3 agents, Process.sequential, Task.context —
-    Reviewer reads PM+TL output and gives next-step suggestions.
+    Shows: @CrewBase, 4 agents, Process.sequential, Task.context —
+    Reviewer reads PM+TL+Designer output and gives next-step suggestions.
     """
 
     agents: list[BaseAgent]
@@ -31,6 +32,14 @@ class IterationCrew:
     def tech_lead(self) -> Agent:
         return Agent(
             config=self.agents_config["tech_lead"],
+            llm=get_llm(),
+            memory=False,
+        )
+
+    @agent
+    def designer(self) -> Agent:
+        return Agent(
+            config=self.agents_config["designer"],
             llm=get_llm(),
             memory=False,
         )
@@ -61,12 +70,21 @@ class IterationCrew:
         )
 
     @task
+    def design_supplement(self) -> Task:
+        """Designer reads PM's answer (via context) and adds design perspective."""
+        return Task(
+            config=self.tasks_config["chat_design_supplement"],
+            agent=self.designer(),
+            context=[self.respond()],
+        )
+
+    @task
     def iterate_review(self) -> Task:
-        """Reviewer reads PM+TL and suggests next actions."""
+        """Reviewer reads PM+TL+Designer and suggests next actions."""
         return Task(
             config=self.tasks_config["iterate_review"],
             agent=self.reviewer(),
-            context=[self.respond(), self.tech_supplement()],
+            context=[self.respond(), self.tech_supplement(), self.design_supplement()],
         )
 
     @crew
@@ -75,5 +93,5 @@ class IterationCrew:
             agents=self.agents,
             tasks=self.tasks,
             process=Process.sequential,
-            verbose=True,  # Set to True for debugging
+            verbose=True, # Set to True for debugging
         )

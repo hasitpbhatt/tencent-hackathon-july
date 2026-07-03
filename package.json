@@ -1,8 +1,8 @@
 {
-  "name": "crewai-product-planner-starter",
-  "description": "A multi-role planner that turns a product name into a design plan, built with CrewAI.",
+  "name": "shipkit-planner",
+  "description": "ShipKit — a multi-agent planning tool that turns a product name into PRD, Tech Spec, and Design Spec.",
   "private": true,
-  "version": "0.1.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
