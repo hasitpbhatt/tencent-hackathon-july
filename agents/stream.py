@@ -7,8 +7,6 @@ a CrewAI Flow and streams agent output via SSE.
 import os
 os.environ.setdefault('CREWAI_DISABLE_VERSION_CHECK', 'true')
 
-import asyncio
-
 from crewai.flow.async_feedback.types import HumanFeedbackPending
 from crewai.types.streaming import FlowStreamingOutput, StreamChunkType
 from crewai.utilities.streaming import (
@@ -26,19 +24,14 @@ from ._lib.persistence import get_persistence, has_pending, load_pending_from_st
 
 logger = create_logger("stream")
 
+HIDDEN_AGENTS = {"Product Reviewer", "Product Designer"}
+
 
 async def _stream_resume(flow, feedback: str) -> FlowStreamingOutput:
-    """Wrap resume_async in the same streaming infrastructure as kickoff_async.
-
-    CrewAI's resume_async() doesn't return a streaming iterator, but the
-    underlying Crew still emits LLMStreamChunkEvent to the event bus.
-    This helper subscribes to those events — same pattern as kickoff_async
-    (flow.py:2151-2193).
-    """
-    result_holder: list = []
+    result_holder = []
     task_info = {"index": 0, "name": "", "id": "", "agent_role": "", "agent_id": ""}
     state = create_streaming_state(task_info, result_holder, use_async=True)
-    output_holder: list = []
+    output_holder = []
 
     async def run():
         try:
@@ -60,12 +53,7 @@ async def _stream_resume(flow, feedback: str) -> FlowStreamingOutput:
     return streaming
 
 
-HIDDEN_AGENTS = {"Product Reviewer", "Product Designer"}
-
-
 async def handler(context):
-    """POST /stream — conversation turn (streaming)."""
-
     conversation_id = getattr(context, "conversation_id", None)
     body = context.request.body or {}
 
@@ -91,9 +79,9 @@ async def handler(context):
         is_resume = await load_pending_from_store(cid, store)
 
     async def gen():
-        pending_writes: list[asyncio.Task] = []
+        pending_writes = []
 
-        def fire_save(role: str, content: str, metadata: dict | None = None):
+        def fire_save(role, content, metadata=None):
             async def _save():
                 try:
                     await store.append_message(cid, role, content, metadata=metadata or {})
@@ -103,7 +91,6 @@ async def handler(context):
 
         try:
             fire_save("user", user_message)
-
             yield context.utils.sse({"type": "flow_start"})
 
             if is_resume:
@@ -121,13 +108,12 @@ async def handler(context):
 
                 if flow.state.rounds <= 3 and not flow.state.latest_prd:
                     flow.state.qa_history = (
-                        flow.state.qa_history + f"\nBoss: {user_message}"
+                        flow.state.qa_history + f"\nUser: {user_message}"
                     ).strip()
 
                 streaming = await _stream_resume(flow, user_message)
             else:
                 flow = TurnFlow(persistence=persistence)
-
                 yield context.utils.sse({"type": "phase", "phase": "discover"})
                 streaming = await flow.kickoff_async(inputs={
                     "id": cid,
@@ -135,56 +121,56 @@ async def handler(context):
                     "locale": locale,
                 })
 
-            # ── Shared streaming loop ──
-            prev_agent = ""
-            current_content_buffer: list[str] = []
-            agent_contents: list[str] = []
-            # Write-step multi-doc tracking: accumulate hidden agent text
-            write_buffers: dict[str, str] = {}
-            write_hidden_last: str = ""
+            # ── Streaming loop ──
+            prev_role = ""
+            buf_parts = []
+            visible_chunks = {}
+            write_raw = {}
 
-            def _flush_prev_agent():
-                nonlocal prev_agent
-                if prev_agent and current_content_buffer:
-                    content = "".join(current_content_buffer)
-                    if prev_agent not in HIDDEN_AGENTS:
-                        agent_contents.append(content)
-                        fire_save("assistant", content, {"agent": prev_agent})
-                    else:
-                        write_buffers[prev_agent] = (write_buffers.get(prev_agent, "") + content).strip()
-                    current_content_buffer.clear()
+            def flush_buf():
+                nonlocal prev_role
+                if not prev_role or not buf_parts:
+                    return
+                text = "".join(buf_parts)
+                buf_parts.clear()
+                if prev_role not in HIDDEN_AGENTS:
+                    visible_chunks[prev_role] = (visible_chunks.get(prev_role, "") + text).strip()
+                    fire_save("assistant", text, {"agent": prev_role})
+                    yield {"type": "agent_end", "agent": prev_role}
+                else:
+                    write_raw[prev_role] = (write_raw.get(prev_role, "") + text).strip()
 
             for chunk in streaming:
-                agent_role = (chunk.agent_role or "").strip()
+                role = (chunk.agent_role or "").strip()
 
-                if agent_role and agent_role != prev_agent:
-                    _flush_prev_agent()
-                    prev_agent = agent_role
-                    if agent_role not in HIDDEN_AGENTS:
-                        yield context.utils.sse({"type": "agent_start", "agent": agent_role})
+                if role and role != prev_role:
+                    for evt in flush_buf():
+                        yield context.utils.sse(evt)
+                    prev_role = role
+                    if role not in HIDDEN_AGENTS:
+                        yield context.utils.sse({"type": "agent_start", "agent": role})
 
                 if chunk.chunk_type == StreamChunkType.TEXT:
-                    text = chunk.content or ""
-                    current_content_buffer.append(text)
-                    if agent_role and agent_role not in HIDDEN_AGENTS:
-                        yield context.utils.sse({
-                            "type": "chunk",
-                            "agent": agent_role,
-                            "content": text,
-                        })
+                    piece = chunk.content or ""
+                    buf_parts.append(piece)
+                    if role and role not in HIDDEN_AGENTS:
+                        yield context.utils.sse({"type": "chunk", "agent": role, "content": piece})
 
-            # Flush remaining buffer
-            _flush_prev_agent()
+            for evt in flush_buf():
+                yield context.utils.sse(evt)
 
-            # Save Designer's Design Spec if collected (hidden agent)
-            if "Product Designer" in write_buffers:
-                fire_save("assistant", write_buffers["Product Designer"], {"agent": "Product Designer"})
+            # Emit Designer hidden output so it appears in chat
+            designer_text = write_raw.get("Product Designer", "").strip()
+            if designer_text:
+                yield context.utils.sse({"type": "agent_start", "agent": "Product Designer"})
+                fire_save("assistant", designer_text, {"agent": "Product Designer"})
+                yield context.utils.sse({"type": "chunk", "agent": "Product Designer", "content": designer_text})
+                yield context.utils.sse({"type": "agent_end", "agent": "Product Designer"})
 
-            # ── Parse options from the last visible agent ──
             is_finalize = any(k in user_message for k in ("确认完成", "finalize", "looks good"))
             if not is_finalize:
                 options = None
-                for content in reversed(agent_contents):
+                for content in reversed(list(visible_chunks.values())):
                     options = _parse_options(content)
                     if options:
                         break
@@ -212,7 +198,6 @@ async def handler(context):
 
 
 def _parse_options(text: str) -> dict | None:
-    """Parse A/B/C/D options from agent output. Returns structured data or None."""
     import re
     choices = []
 
