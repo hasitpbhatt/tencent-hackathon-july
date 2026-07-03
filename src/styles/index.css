@@ -40,6 +40,21 @@
   --radius-sm: 8px;
 }
 
+/* ========== Interactive Elements ========== */
+button, .cursor-pointer {
+  transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+button:hover:not(:disabled), .cursor-pointer:hover:not(:disabled) {
+  transform: scale(1.02);
+}
+button:active:not(:disabled), .cursor-pointer:active:not(:disabled) {
+  transform: scale(0.98);
+}
+button:disabled, .cursor-pointer:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 /* ========== Base ========== */
 body {
   margin: 0;
@@ -68,9 +83,8 @@ body {
 
 /* Timeline node pulse */
 @keyframes pulse-ring {
-  0% { box-shadow: 0 0 0 0 rgba(99, 150, 245, 0.35); }
-  50% { box-shadow: 0 0 0 7px rgba(99, 150, 245, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(99, 150, 245, 0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(99, 150, 245, 0.4); transform: scale(1); }
+  50% { box-shadow: 0 0 0 12px rgba(99, 150, 245, 0); transform: scale(1.05); }
 }
 
 /* General spin */
@@ -118,6 +132,8 @@ body {
 @keyframes connector-flow {
   from { left: -100%; }
   to { left: 100%; }
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
 }
 
 /* Gentle float for empty state icon */
@@ -139,12 +155,14 @@ body {
 
 /* ========== Focus States ========== */
 input:focus {
-  border-color: var(--border-focus) !important;
-  box-shadow: 0 0 0 3px rgba(99, 150, 245, 0.1);
+  outline: none;
+  border-color: rgba(99, 150, 245, 0.6) !important;
+  box-shadow: 0 0 0 4px rgba(99, 150, 245, 0.15), 0 0 0 8px rgba(99, 150, 245, 0.05);
 }
 
 /* ========== Selection ========== */
 ::selection {
-  background: rgba(99, 150, 245, 0.25);
-  color: var(--text-primary);
+  background: rgba(99, 150, 245, 0.3) !important;
+  color: var(--text-primary) !important;
+  text-shadow: none;
 }

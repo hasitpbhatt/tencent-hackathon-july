@@ -41,55 +41,58 @@ export function ChatMessage({ agent, status, content }: Props) {
     <div className="flex animate-fade-in-up" style={{ gap: 12, padding: '14px 0' }}>
       {/* ─── Avatar ─── */}
       <div style={{ flexShrink: 0 }}>
-        {isRunning ? (
-          /* Spinning ring wrapper → inner avatar counter-rotates */
-          <div
-            style={{
-              width: 42,
-              height: 42,
-              borderRadius: '50%',
-              border: '2px solid transparent',
-              borderTopColor: config.color,
-              animation: 'avatar-spin 1s linear infinite',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <div
-              style={{
-                width: 34,
-                height: 34,
-                borderRadius: '50%',
-                background: avatarStyle.bg,
-                border: `1px solid ${avatarStyle.border}`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: 17,
-                animation: 'avatar-spin 1s linear infinite reverse',
-              }}
-            >
-              {config.avatar}
-            </div>
-          </div>
-        ) : (
-          <div
-            style={{
-              width: 38,
-              height: 38,
-              borderRadius: '50%',
-              background: avatarStyle.bg,
-              border: `1px solid ${avatarStyle.border}`,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: 18,
-            }}
-          >
-            {config.avatar}
-          </div>
-        )}
+  {isRunning ? (
+    /* Spinning ring wrapper → inner avatar counter-rotates */
+    <div
+      style={{
+        width: 42,
+        height: 42,
+        borderRadius: '50%',
+        border: '2px solid transparent',
+        borderTopColor: config.color,
+        animation: 'avatar-spin 1s linear infinite',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        boxShadow: '0 4px 12px rgba(99, 150, 245, 0.15)',
+      }}
+    >
+      <div
+        style={{
+          width: 34,
+          height: 34,
+          borderRadius: '50%',
+          background: avatarStyle.bg,
+          border: `1px solid ${avatarStyle.border}`,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: 17,
+          animation: 'avatar-spin 1s linear infinite reverse',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+        }}
+      >
+        {config.avatar}
+      </div>
+    </div>
+  ) : (
+    <div
+      style={{
+        width: 38,
+        height: 38,
+        borderRadius: '50%',
+        background: avatarStyle.bg,
+        border: `1px solid ${avatarStyle.border}`,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: 18,
+        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+      }}
+    >
+      {config.avatar}
+    </div>
+  )}
       </div>
 
       {/* ─── Body ─── */}
