@@ -1,54 +1,71 @@
 @import "tailwindcss";
 
-/* ========== Design System — "Command Center" ========== */
+/* ========== Design System — Apple Dark Mode ========== */
 :root {
-  /* Background depth layers — lifted slightly for better contrast */
-  --bg-primary: #10111a;
-  --bg-secondary: #181924;
-  --bg-tertiary: #222332;
-  --bg-hover: #2a2b3d;
-  --bg-elevated: #252638;
+  /* Background depth layers */
+  --bg-primary: #1d1d1f;
+  --bg-secondary: #2d2d2d;
+  --bg-tertiary: #3a3a3c;
+  --bg-hover: #48484a;
+  --bg-elevated: #3a3a3c;
 
-  /* Text hierarchy — brighter for readability */
-  --text-primary: #f4f4f8;
-  --text-secondary: #a8a8c0;
+  /* Text hierarchy */
+  --text-primary: #f5f5f7;
+  --text-secondary: #a1a1a6;
   --text-muted: #6e6e8a;
 
   /* Accent palette */
-  --accent-blue: #6396f5;
-  --accent-green: #3dd9a0;
-  --accent-amber: #f5c842;
-  --accent-red: #f07070;
+  --accent-blue: #0A84FF;
+  --accent-green: #30D158;
+  --accent-amber: #FF9F0A;
+  --accent-red: #FF453A;
 
-/* Agent identity colors */
---agent-pm: #a78bfa;
---agent-pm-bg: rgba(167, 139, 250, 0.10);
---agent-pm-border: rgba(167, 139, 250, 0.22);
---agent-dev: #38bdf8;
---agent-dev-bg: rgba(56, 189, 248, 0.10);
---agent-dev-border: rgba(56, 189, 248, 0.22);
---agent-des: #34d399;
---agent-des-bg: rgba(52, 211, 153, 0.10);
---agent-des-border: rgba(52, 211, 153, 0.22);
+  /* Agent identity colors */
+  --agent-pm: #BF5AF2;
+  --agent-pm-bg: rgba(191, 90, 242, 0.10);
+  --agent-pm-border: rgba(191, 90, 242, 0.22);
+  --agent-tl: #64D2FF;
+  --agent-tl-bg: rgba(100, 210, 255, 0.10);
+  --agent-tl-border: rgba(100, 210, 255, 0.22);
+  --agent-designer: #30D158;
+  --agent-designer-bg: rgba(48, 209, 88, 0.10);
+  --agent-designer-border: rgba(48, 209, 88, 0.22);
 
-  /* Borders — slightly more visible */
-  --border: #2a2b40;
-  --border-light: #383950;
-  --border-focus: rgba(99, 150, 245, 0.45);
+  /* Borders */
+  --border: #3a3a3c;
+  --border-light: #48484a;
+  --border-focus: rgba(10, 132, 255, 0.45);
 
-  /* System */
+  /* Radius scale */
+  --radius-xs: 6px;
   --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+
+  /* Shadow system */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.5);
+
+  /* Spacing scale */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 40px;
 }
 
 /* ========== Interactive Elements ========== */
 button, .cursor-pointer {
-  transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transition: opacity 0.2s ease, background-color 0.2s ease;
 }
 button:hover:not(:disabled), .cursor-pointer:hover:not(:disabled) {
-  transform: scale(1.02);
+  opacity: 1;
 }
 button:active:not(:disabled), .cursor-pointer:active:not(:disabled) {
-  transform: scale(0.98);
+  opacity: 0.9;
 }
 button:disabled, .cursor-pointer:disabled {
   opacity: 0.55;
@@ -61,108 +78,72 @@ body {
   background: var(--bg-primary);
   color: var(--text-primary);
   font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans SC', sans-serif;
-  line-height: 1.6;
+  font-size: 15px;
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 /* ========== Animations ========== */
 
-/* Cursor blink for streaming text */
+/* Streaming cursor: subtle opacity pulse */
 .cursor-blink::after {
   content: '▌';
-  animation: blink-cursor 0.7s step-end infinite;
+  animation: cursor-pulse 0.5s ease infinite;
   color: var(--accent-blue);
   font-weight: 300;
   margin-left: 1px;
 }
-@keyframes blink-cursor {
-  0%, 100% { opacity: 0.8; }
-  50% { opacity: 0; }
+@keyframes cursor-pulse {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
 }
 
-/* Timeline node pulse */
-@keyframes pulse-ring {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(99, 150, 245, 0.4); transform: scale(1); }
-  50% { box-shadow: 0 0 0 12px rgba(99, 150, 245, 0); transform: scale(1.05); }
-}
-
-/* General spin */
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-/* Avatar ring spin */
-@keyframes avatar-spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-/* Status dot blink */
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.25; }
-}
-
-@keyframes dot-bounce {
-  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
-  30% { transform: translateY(-4px); opacity: 1; }
-}
-
-/* Entrance: fade + slide up */
+/* Entrance: fade + slide up (shortened to 0.3s) */
 @keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
 .animate-fade-in-up {
-  animation: fadeInUp 0.35s ease-out both;
+  animation: fadeInUp 0.3s ease-out both;
 }
 
-/* Entrance: fade */
+/* Entrance: fade (0.2s) */
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 .animate-fade-in {
-  animation: fadeIn 0.35s ease-out both;
+  animation: fadeIn 0.2s ease-out both;
 }
 
-/* Connector flow animation for timeline */
-@keyframes connector-flow {
-  from { left: -100%; }
-  to { left: 100%; }
-  0%, 100% { opacity: 0.3; }
-  50% { opacity: 1; }
-}
-
-/* Gentle float for empty state icon */
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
+/* General spin (kept for loading spinner) */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 /* ========== Scrollbar ========== */
-::-webkit-scrollbar { width: 5px; }
-::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: #3a3a3c; }
 ::-webkit-scrollbar-thumb {
-  background: var(--border-light);
-  border-radius: 10px;
+  background: #636366;
+  border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--text-muted);
+  background: #8e8e93;
 }
 
 /* ========== Focus States ========== */
 input:focus {
   outline: none;
-  border-color: rgba(99, 150, 245, 0.6) !important;
-  box-shadow: 0 0 0 4px rgba(99, 150, 245, 0.15), 0 0 0 8px rgba(99, 150, 245, 0.05);
+  border-color: rgba(10, 132, 255, 0.6) !important;
+  box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.15);
 }
 
 /* ========== Selection ========== */
 ::selection {
-  background: rgba(99, 150, 245, 0.3) !important;
+  background: rgba(10, 132, 255, 0.3) !important;
   color: var(--text-primary) !important;
   text-shadow: none;
 }

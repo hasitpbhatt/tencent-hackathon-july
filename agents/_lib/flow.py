@@ -159,7 +159,7 @@ class TurnFlow(Flow[TurnState]):
 
         # Update chat history.
         if user_msg:
-                    history_entry = f"\nUser: {user_msg}\nPM: {pm_response}"
+            history_entry = f"\nUser: {user_msg}\nPM: {pm_response}"
             if tl_response and tl_response.lower() not in ("n/a", "无补充"):
                 history_entry += f"\nTL: {tl_response}"
             if designer_response and designer_response.lower() not in ("n/a", "无补充"):

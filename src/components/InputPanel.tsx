@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { t, getLang } from '../i18n';
+import { Send, Plus, Clock, X } from 'lucide-react';
 import type { HistoryItem } from '../hooks/useSSE';
 
 interface Props {
@@ -46,16 +47,14 @@ export function InputPanel({
   };
 
   return (
-    <div className="flex flex-col h-full" style={{ gap: 16 }}>
+    <div className="flex flex-col h-full" style={{ gap: 24 }}>
       {/* Product name input */}
-      <div className="flex flex-col" style={{ gap: 8 }}>
+      <div className="flex flex-col" style={{ gap: 12 }}>
         <label
           style={{
-            fontSize: 11,
-            fontWeight: 600,
-            color: 'var(--text-muted)',
-            textTransform: 'uppercase',
-            letterSpacing: '1.2px',
+            fontSize: 13,
+            fontWeight: 500,
+            color: 'var(--text-secondary)',
           }}
         >
           {t('input.label')}
@@ -70,12 +69,12 @@ export function InputPanel({
           disabled={isRunning}
           style={{
             width: '100%',
-            padding: '10px 14px',
-            borderRadius: 'var(--radius-sm)',
-            border: '1px solid var(--border-light)',
-            background: 'var(--bg-tertiary)',
+            padding: '12px 16px',
+            borderRadius: 'var(--radius-md)',
+            border: '1px solid var(--border)',
+            background: 'var(--bg-secondary)',
             color: 'var(--text-primary)',
-            fontSize: 13,
+            fontSize: 14,
             fontFamily: 'inherit',
             outline: 'none',
             opacity: isRunning ? 0.5 : 1,
@@ -88,14 +87,14 @@ export function InputPanel({
           className="cursor-pointer"
           style={{
             width: '100%',
-            padding: '10px 0',
-            borderRadius: 'var(--radius-sm)',
+            padding: '12px 0',
+            borderRadius: 9999,
             border: 'none',
             background: isRunning
               ? 'var(--accent-amber)'
-              : 'linear-gradient(135deg, #5b93f5 0%, #7c6bf5 100%)',
+              : '#0A84FF',
             color: '#fff',
-            fontSize: 13,
+            fontSize: 14,
             fontWeight: 600,
             fontFamily: 'inherit',
             opacity: isRunning || !value.trim() ? 0.55 : 1,
@@ -103,17 +102,18 @@ export function InputPanel({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: 7,
+            gap: 8,
             boxShadow: isRunning || !value.trim()
               ? 'none'
-              : '0 2px 12px rgba(91, 147, 245, 0.25)',
+              : '0 2px 8px rgba(10, 132, 255, 0.3)',
+            transition: 'opacity 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease',
           }}
         >
-          {isRunning && (
+          {isRunning ? (
             <span
               style={{
-                width: 13,
-                height: 13,
+                width: 14,
+                height: 14,
                 borderRadius: '50%',
                 border: '2px solid rgba(255,255,255,0.3)',
                 borderTopColor: '#fff',
@@ -121,6 +121,8 @@ export function InputPanel({
                 display: 'inline-block',
               }}
             />
+          ) : (
+            <Send size={16} />
           )}
           {isRunning ? t('input.running') : t('input.start')}
         </button>
@@ -128,31 +130,31 @@ export function InputPanel({
 
       {/* Conversation history */}
       {history.length > 0 && (
-        <div className="flex flex-col flex-1 min-h-0" style={{ gap: 8 }}>
+        <div className="flex flex-col flex-1 min-h-0" style={{ gap: 12 }}>
           <span
             style={{
-              fontSize: 11,
-              fontWeight: 600,
-              color: 'var(--text-muted)',
-              textTransform: 'uppercase',
-              letterSpacing: '1.2px',
+              fontSize: 13,
+              fontWeight: 500,
+              color: 'var(--text-secondary)',
             }}
           >
             {t('history.title')}
           </span>
-          <div className="flex flex-col overflow-y-auto" style={{ gap: 4 }}>
+          <div className="flex flex-col overflow-y-auto" style={{ gap: 8 }}>
             {history.map((item) => (
               <div
                 key={item.id}
                 className="flex items-center"
                 style={{
-                  padding: '6px 10px',
-                  borderRadius: 8,
-                  border: '1px solid var(--border-light)',
-                  background: 'var(--bg-tertiary)',
-                  gap: 8,
+                  padding: '12px 16px',
+                  borderRadius: 'var(--radius-md)',
+                  border: '1px solid var(--border)',
+                  background: 'var(--bg-secondary)',
+                  gap: 12,
+                  transition: 'background-color 0.2s ease, opacity 0.2s ease',
                 }}
               >
+                <Clock size={14} color="var(--text-muted)" style={{ flexShrink: 0 }} />
                 <button
                   onClick={() => onSelectHistory(item.id)}
                   disabled={isRunning}
@@ -168,10 +170,10 @@ export function InputPanel({
                     opacity: isRunning ? 0.5 : 1,
                   }}
                 >
-                  <div style={{ fontSize: 12, color: 'var(--text-primary)', lineHeight: 1.4 }}>
+                  <div style={{ fontSize: 14, color: 'var(--text-primary)', lineHeight: 1.4 }}>
                     {item.productName}
                   </div>
-                  <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
                     {formatRelativeTime(item.timestamp)}
                   </div>
                 </button>
@@ -181,17 +183,14 @@ export function InputPanel({
                   style={{
                     background: 'none',
                     border: 'none',
-                    padding: '2px 4px',
-                    fontSize: 11,
+                    padding: 2,
                     color: 'var(--text-muted)',
                     cursor: isRunning ? 'not-allowed' : 'pointer',
-                    fontFamily: 'inherit',
-                    borderRadius: 4,
-                    opacity: isRunning ? 0.5 : 1,
+                    opacity: isRunning ? 0.5 : 0.8,
                   }}
                   title={t('history.delete')}
                 >
-                  ✕
+                  <X size={14} />
                 </button>
               </div>
             ))}
@@ -201,27 +200,32 @@ export function InputPanel({
 
       {history.length === 0 && <div className="flex-1" />}
 
-      {/* New chat button */}
+      {/* New chat button — subtle, text-based */}
       {!isFirstTurn && (
         <button
           onClick={onNewChat}
           disabled={isRunning}
-          className="cursor-pointer"
           style={{
             width: '100%',
-            padding: '8px 0',
-            borderRadius: 'var(--radius-sm)',
+            padding: '10px 0',
+            borderRadius: 'var(--radius-md)',
             border: '1px solid var(--border)',
             background: 'transparent',
-            color: 'var(--text-muted)',
-            fontSize: 12,
+            color: 'var(--text-secondary)',
+            fontSize: 13,
             fontWeight: 500,
             fontFamily: 'inherit',
-            opacity: isRunning ? 0.4 : 1,
+            opacity: isRunning ? 0.4 : 0.8,
             cursor: isRunning ? 'not-allowed' : 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 6,
+            transition: 'opacity 0.2s ease, background-color 0.2s ease',
           }}
         >
-          + {t('input.start')}
+          <Plus size={14} />
+          {t('input.start')}
         </button>
       )}
     </div>

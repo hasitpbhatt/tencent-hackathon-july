@@ -5,15 +5,15 @@ interface Props {
   phases: PhaseNode[];
 }
 
-const PHASE_META: Record<string, { icon: string; labelKey: string; color: string }> = {
-  discover: { icon: '📝', labelKey: 'phase.discover', color: 'var(--agent-pm)' },
-  draft: { icon: '📄', labelKey: 'phase.draft', color: 'var(--agent-dev)' },
-  iterate: { icon: '💡', labelKey: 'phase.iterate', color: 'var(--accent-blue)' },
+const PHASE_META: Record<string, { labelKey: string; color: string }> = {
+  discover: { labelKey: 'phase.discover', color: 'var(--agent-pm)' },
+  draft: { labelKey: 'phase.draft', color: 'var(--agent-tl)' },
+  iterate: { labelKey: 'phase.iterate', color: 'var(--accent-blue)' },
 };
 
 export function FlowTimeline({ phases }: Props) {
   return (
-    <div className="flex items-center justify-center" style={{ padding: '14px 24px', gap: 0 }}>
+    <div className="flex items-center justify-center" style={{ padding: '16px 24px', gap: 0 }}>
       {phases.map((node, i) => {
         const meta = PHASE_META[node.phase];
         const label = t(meta.labelKey);
@@ -23,33 +23,33 @@ export function FlowTimeline({ phases }: Props) {
 
         return (
           <div key={node.phase} className="flex items-center">
-            <div className="flex flex-col items-center" style={{ gap: 5 }}>
+            <div className="flex flex-col items-center" style={{ gap: 6 }}>
               <div
                 className="flex items-center justify-center"
                 style={{
                   width: 32,
                   height: 32,
-                  borderRadius: '50%',
+                  borderRadius: 12,
                   border: `2px solid ${
                     isCompleted ? 'var(--accent-green)'
                     : isRunning ? meta.color
                     : 'var(--border)'
                   }`,
-                  background: isCompleted ? 'var(--accent-green)' : 'var(--bg-secondary)',
-                  color: isCompleted ? '#fff' : isRunning ? meta.color : 'var(--text-muted)',
-                  fontSize: isCompleted ? 12 : 14,
+                  background: isCompleted ? 'var(--accent-green)' : isRunning ? meta.color : '#2d2d2d',
+                  color: isCompleted ? '#fff' : isRunning ? '#fff' : 'var(--text-muted)',
+                  fontSize: 12,
                   fontWeight: 700,
-                  transition: 'all 0.4s ease',
-                  animation: isRunning ? 'pulse-ring 2s infinite' : 'none',
+                  transition: 'all 0.3s ease',
+                  boxShadow: isRunning ? 'var(--shadow-lg)' : 'var(--shadow-sm)',
                 }}
               >
-                {isCompleted ? '✓' : meta.icon}
+                {isCompleted ? '✓' : i + 1}
               </div>
               <span
                 style={{
-                  fontSize: 10,
+                  fontSize: 14,
                   fontWeight: 500,
-                  color: node.status === 'pending' ? 'var(--text-muted)' : 'var(--text-secondary)',
+                  color: isCompleted || isRunning ? '#f5f5f7' : '#a1a1a6',
                   transition: 'color 0.3s ease',
                 }}
               >
@@ -61,30 +61,13 @@ export function FlowTimeline({ phases }: Props) {
               <div
                 style={{
                   width: 52,
-                  height: 2,
-                  margin: '0 3px',
-                  marginBottom: 20,
-                  borderRadius: 1,
-                  background: isCompleted ? 'var(--accent-green)' : 'var(--border)',
-                  transition: 'background 0.4s ease',
-                  position: 'relative',
-                  overflow: 'hidden',
+                  height: 1,
+                  margin: '0 4px',
+                  marginBottom: 22,
+                  background: isCompleted ? 'var(--accent-green)' : '#3a3a3c',
+                  transition: 'background 0.3s ease',
                 }}
-              >
-                {isRunning && (
-                  <div
-                    style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: '-100%',
-                      width: '100%',
-                      height: '100%',
-          background: `linear-gradient(90deg, transparent, ${meta.color}, transparent)`,
-          animation: 'connector-flow 2s infinite ease-in-out',
-                    }}
-                  />
-                )}
-              </div>
+              />
             )}
           </div>
         );

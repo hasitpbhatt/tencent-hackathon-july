@@ -16,22 +16,21 @@ export function RoleDivider({ agent }: Props) {
         style={{
           flex: 1,
           height: 1,
-          background: 'linear-gradient(90deg, transparent 0%, var(--border) 100%)',
+          background: '#3a3a3c',
         }}
       />
       <div
         className="flex items-center"
         style={{
           gap: 6,
-          padding: '3px 11px',
-          borderRadius: 16,
-          border: '1px solid var(--border)',
-          background: 'var(--bg-secondary)',
+          padding: '4px 12px',
+          borderRadius: 'var(--radius-sm)',
+          background: '#2d2d2d',
           whiteSpace: 'nowrap',
         }}
       >
         <span style={{ width: 5, height: 5, borderRadius: '50%', background: color }} />
-        <span style={{ fontSize: 10, fontWeight: 500, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+        <span style={{ fontSize: 13, fontWeight: 500, color: '#a1a1a6' }}>
           {shortName} {t('msg.speaking')}
         </span>
       </div>
@@ -39,7 +38,7 @@ export function RoleDivider({ agent }: Props) {
         style={{
           flex: 1,
           height: 1,
-          background: 'linear-gradient(90deg, var(--border) 0%, transparent 100%)',
+          background: '#3a3a3c',
         }}
       />
     </div>

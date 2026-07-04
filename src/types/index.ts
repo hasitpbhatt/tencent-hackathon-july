@@ -19,7 +19,7 @@ export type Phase = 'discover' | 'draft' | 'iterate';
 
 // --- Agent Config ---
 export interface AgentConfig {
-  avatar: string;
+  initials: string;
   color: string;
   crewTagKey: string;
   shortNameKey: string;  // i18n key for short display name
@@ -27,20 +27,20 @@ export interface AgentConfig {
 
 export const AGENT_CONFIG: Record<string, AgentConfig> = {
   'Senior Product Manager': {
-    avatar: '👩‍💼',
+    initials: 'PM',
     color: 'var(--agent-pm)',
     crewTagKey: 'crew.pm.tag',
     shortNameKey: 'agent.pm',
   },
   'Senior Tech Lead': {
-    avatar: '👨‍💻',
-    color: 'var(--agent-dev)',
+    initials: 'TL',
+    color: 'var(--agent-tl)',
     crewTagKey: 'crew.tl.tag',
     shortNameKey: 'agent.dev',
   },
   'Product Designer': {
-    avatar: '🎨',
-    color: 'var(--agent-des)',
+    initials: 'DS',
+    color: 'var(--agent-designer)',
     crewTagKey: 'crew.des.tag',
     shortNameKey: 'agent.des',
   },

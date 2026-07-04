@@ -8,6 +8,7 @@ import { RoleDivider } from './components/RoleDivider';
 import { ErrorMessage } from './components/ErrorMessage';
 import type { ChatItem, FlowStatus, Phase, PhaseNode, SSEEvent } from './types';
 import { t, getLocaleName, toggleLang, onLangChange } from './i18n';
+import { Send, Plus, Menu, X, ChevronRight, Clock, Sparkles, MessageSquare, AlertCircle } from 'lucide-react';
 
 // --- Phase nodes (the timeline) ---
 
@@ -28,7 +29,7 @@ function phasesFor(current: Phase | null, completed: Set<Phase>): PhaseNode[] {
   }));
 }
 
-// --- App state ---
+// --- App state --
 
 interface AppState {
   flowStatus: FlowStatus;
@@ -36,6 +37,7 @@ interface AppState {
   currentPhase: Phase | null;
   completedPhases: Set<Phase>;
   isHistoryView: boolean;
+  sidebarOpen: boolean;
 }
 
 const INITIAL_STATE: AppState = {
@@ -44,9 +46,10 @@ const INITIAL_STATE: AppState = {
   currentPhase: null,
   completedPhases: new Set(),
   isHistoryView: false,
+  sidebarOpen: true,
 };
 
-// --- Reducer ---
+// --- Reducer --
 
 type Action =
   | { type: 'RESET' }
@@ -60,12 +63,13 @@ type Action =
   | { type: 'SELECT_OPTION'; key: string }
   | { type: 'DONE' }
   | { type: 'ERROR'; message: string }
-  | { type: 'RESTORE'; messages: ChatItem[]; phase: Phase | null; completed: Set<Phase> };
+  | { type: 'RESTORE'; messages: ChatItem[]; phase: Phase | null; completed: Set<Phase> }
+  | { type: 'TOGGLE_SIDEBAR' };
 
 function reducer(state: AppState, action: Action): AppState {
   switch (action.type) {
     case 'RESET':
-      return { ...INITIAL_STATE, completedPhases: new Set(), isHistoryView: false };
+      return { ...INITIAL_STATE, completedPhases: new Set(), isHistoryView: false, sidebarOpen: state.sidebarOpen };
 
     case 'USER_MESSAGE':
       return {
@@ -77,7 +81,6 @@ function reducer(state: AppState, action: Action): AppState {
       return { ...state, flowStatus: 'running' };
 
     case 'PHASE': {
-      // Mark previous phase completed when switching to a different one.
       const completed = new Set(state.completedPhases);
       if (state.currentPhase && state.currentPhase !== action.phase) {
         completed.add(state.currentPhase);
@@ -114,7 +117,6 @@ function reducer(state: AppState, action: Action): AppState {
       for (let i = msgs.length - 1; i >= 0; i--) {
         const m = msgs[i];
         if (m.type === 'message' && m.agent === action.agent && m.status === 'running') {
-          // Strip markers for display
           let displayContent = m.content
             .replace(/\[READY\]/g, '')
             .replace(/\[PRD_UPDATED\]/g, '')
@@ -129,14 +131,12 @@ function reducer(state: AppState, action: Action): AppState {
     }
 
     case 'DONE': {
-      // If there are pending options, flow is waiting for user — show as idle not completed
       const hasPendingOptions = state.messages.some(
         (m) => m.type === 'options' && !m.selected
       );
       if (hasPendingOptions) {
         return { ...state, flowStatus: 'idle' };
       }
-      // Mark current phase as completed when flow truly ends
       const allCompleted = new Set(state.completedPhases);
       if (state.currentPhase) {
         allCompleted.add(state.currentPhase);
@@ -181,17 +181,19 @@ function reducer(state: AppState, action: Action): AppState {
         isHistoryView: true,
       };
 
+    case 'TOGGLE_SIDEBAR':
+      return { ...state, sidebarOpen: !state.sidebarOpen };
+
     default:
       return state;
   }
 }
 
-// --- App ---
+// --- App --
 
 export default function App() {
   const [state, dispatch] = useReducer(reducer, INITIAL_STATE);
 
-  // SSE event handler — called directly from the stream reader, no intermediate buffer
   const handleSSEEvent = useCallback((event: SSEEvent) => {
     switch (event.type) {
       case 'flow_start':
@@ -227,7 +229,6 @@ export default function App() {
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  // Auto-dismiss load error toast after 3s
   useEffect(() => {
     if (loadError) {
       const timer = setTimeout(() => setLoadError(null), 3000);
@@ -242,13 +243,11 @@ export default function App() {
     refreshHistory();
   }, [refreshHistory]);
 
-  // Force re-render on language change
   const [, setLangTick] = useState(0);
   useEffect(() => {
     return onLangChange(() => setLangTick((n) => n + 1));
   }, []);
 
-  // Smart auto-scroll
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const isNearBottomRef = useRef(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -268,7 +267,6 @@ export default function App() {
   const isFirstTurn = state.messages.length === 0;
 
   const handleSubmit = useCallback((text: string) => {
-    // If previous conversation ended, reset before starting new one
     if (!isFirstTurn) {
       dispatch({ type: 'RESET' });
       resetConversation();
@@ -323,14 +321,12 @@ export default function App() {
           continue;
         }
 
-        // Track phase progression for the timeline
         if (phase) {
           if (lastPhase && lastPhase !== phase) completed.add(lastPhase);
           lastPhase = phase;
         }
 
         if (agent) {
-          // Hide Reviewer messages (same as live streaming)
           if (agent === 'Product Reviewer') continue;
           restored.push({ type: 'divider', agent });
           restored.push({
@@ -342,7 +338,6 @@ export default function App() {
         }
       }
 
-      // Promote the last seen phase as the current phase (if not yet completed elsewhere)
       if (lastPhase) completed.delete(lastPhase);
 
       dispatch({
@@ -357,7 +352,6 @@ export default function App() {
     setIsLoadingHistory(false);
   }, [loadHistory]);
 
-  // Auto-restore from URL ?id= on mount
   const hasAutoLoaded = useRef(false);
   useEffect(() => {
     if (hasAutoLoaded.current) return;
@@ -374,27 +368,32 @@ export default function App() {
     <div className="h-screen flex flex-col" style={{ background: 'var(--bg-primary)' }}>
       {/* Top Bar */}
       <header
-        className="flex items-center justify-between px-5 flex-shrink-0"
+        className="flex items-center justify-between flex-shrink-0"
         style={{
-          height: 52,
+          height: 64,
+          padding: '0 24px',
           borderBottom: '1px solid var(--border)',
-          background: 'var(--bg-secondary)',
+          background: 'rgba(29, 29, 31, 0.8)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
         }}
       >
         <div className="flex items-center gap-3">
           <div
             className="flex items-center justify-center"
             style={{
-              width: 26,
-              height: 26,
-              borderRadius: 7,
-              background: 'linear-gradient(135deg, #5b93f5 0%, #7c3aed 100%)',
-              fontSize: 12,
+              width: 28,
+              height: 28,
+              borderRadius: 8,
+              background: 'linear-gradient(135deg, #0A84FF 0%, #BF5AF2 100%)',
+              fontSize: 14,
+              fontWeight: 700,
+              color: '#fff',
             }}
           >
-            ⚡
+            S
           </div>
-          <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)', letterSpacing: '-0.3px' }}>
+          <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)', letterSpacing: '-0.3px' }}>
             ShipKit
           </span>
           <div className="flex items-center gap-1.5" style={{ marginLeft: 4 }}>
@@ -411,49 +410,73 @@ export default function App() {
                 animation: state.flowStatus === 'running' ? 'blink 1.2s infinite' : 'none',
               }}
             />
-            <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 500 }}>
+            <span style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 500 }}>
               {t(`status.${state.flowStatus}`)}
             </span>
           </div>
         </div>
 
-        <button
-          onClick={toggleLang}
-          className="cursor-pointer"
-          style={{
-            padding: '3px 10px',
-            borderRadius: 6,
-            border: '1px solid var(--border)',
-            background: 'transparent',
-            color: 'var(--text-muted)',
-            fontSize: 11,
-            fontWeight: 500,
-            fontFamily: 'inherit',
-          }}
-        >
-          {t('lang.switch')}
-        </button>
+        <div className="flex items-center gap-3">
+          {/* Mobile sidebar toggle */}
+          <button
+            onClick={() => dispatch({ type: 'TOGGLE_SIDEBAR' })}
+            className="cursor-pointer hidden md:flex"
+            style={{
+              background: 'none',
+              border: 'none',
+              padding: 4,
+              color: 'var(--text-secondary)',
+            }}
+          >
+            <Menu size={18} />
+          </button>
+
+          <button
+            onClick={toggleLang}
+            className="cursor-pointer"
+            style={{
+              padding: '4px 12px',
+              borderRadius: 'var(--radius-xs)',
+              border: '1px solid var(--border)',
+              background: 'transparent',
+              color: 'var(--text-secondary)',
+              fontSize: 12,
+              fontWeight: 500,
+              fontFamily: 'inherit',
+            }}
+          >
+            {t('lang.switch')}
+          </button>
+        </div>
       </header>
 
       {/* Main Layout */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Floating error toast — auto-dismiss 3s */}
+        {/* Floating error toast */}
         {loadError && (
-          <div className="absolute top-4 inset-x-0 flex justify-center z-50 animate-fade-in-up">
-            <div className="flex items-center gap-2.5 rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 shadow-lg">
-              <svg className="h-4 w-4 shrink-0 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-              <span className="text-sm text-red-700">
+          <div className="absolute top-4 inset-x-0 flex justify-center z-50 animate-fade-in">
+            <div className="flex items-center gap-2.5" style={{
+              borderRadius: 'var(--radius-md)',
+              background: '#2d2d2d',
+              padding: '10px 16px',
+              boxShadow: 'var(--shadow-md)',
+              border: '1px solid rgba(255, 69, 58, 0.2)',
+            }}>
+              <AlertCircle size={16} color="#FF453A" />
+              <span style={{ fontSize: 14, color: '#FF453A' }}>
                 {loadError === 'empty' ? t('history.empty') : `${t('history.failed')}: ${loadError}`}
               </span>
               <button
                 onClick={() => setLoadError(null)}
-                className="cursor-pointer ml-1 rounded p-0.5 text-red-400 hover:text-red-600 transition-colors"
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  padding: 2,
+                  color: 'var(--text-secondary)',
+                  cursor: 'pointer',
+                }}
               >
-                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <X size={14} />
               </button>
             </div>
           </div>
@@ -464,9 +487,11 @@ export default function App() {
           className="flex-shrink-0 overflow-hidden"
           style={{
             width: 300,
-            padding: 20,
+            padding: 24,
             borderRight: '1px solid var(--border)',
             background: 'var(--bg-secondary)',
+            // Responsive: on small screens, overlay
+            position: 'relative',
           }}
         >
           <InputPanel
@@ -511,56 +536,55 @@ export default function App() {
                     width: 24,
                     height: 24,
                     borderRadius: '50%',
-                    border: '3px solid var(--border-light)',
+                    border: '3px solid var(--border)',
                     borderTopColor: 'var(--accent-blue)',
                     animation: 'spin 0.8s linear infinite',
                     display: 'inline-block',
                     marginBottom: 12,
                   }}
                 />
-                <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+                <span style={{ fontSize: 14, color: 'var(--text-secondary)' }}>
                   {t('history.loading')}
                 </span>
               </div>
             ) : isFirstTurn ? (
-              /* Empty state */
+              /* Empty state — clean text-based */
               <div
-                className="h-full flex flex-col items-center justify-center"
+                className="h-full flex flex-col items-center justify-center animate-fade-in"
                 style={{ padding: '0 24px' }}
               >
                 <div
-                  className="flex items-center justify-center"
                   style={{
-                    width: 80,
-                    height: 80,
-                    borderRadius: 20,
-                    background: 'linear-gradient(145deg, var(--bg-tertiary), var(--bg-elevated))',
-                    border: '1px solid var(--border-light)',
-                    fontSize: 36,
+                    width: 56,
+                    height: 56,
+                    borderRadius: 'var(--radius-lg)',
+                    background: 'var(--bg-secondary)',
+                    border: '1px solid var(--border)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                     marginBottom: 24,
-                    boxShadow: '0 4px 24px rgba(99, 150, 245, 0.08), 0 0 0 1px rgba(99, 150, 245, 0.05)',
-                    animation: 'float 4s ease-in-out infinite',
+                    boxShadow: 'var(--shadow-sm)',
                   }}
                 >
-                  🚀
+                  <Sparkles size={28} color="var(--accent-blue)" />
                 </div>
-                <h3 style={{ fontSize: 17, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 20 }}>
+                <h3 style={{ fontSize: 28, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 24 }}>
                   {t('empty.title')}
                 </h3>
-                <div className="flex flex-col" style={{ gap: 0, maxWidth: 320 }}>
+                <div className="flex flex-col" style={{ gap: 0, maxWidth: 340 }}>
                   {['empty.step1', 'empty.step2', 'empty.step3'].map((key, i, arr) => (
-                    <div key={key} className="flex items-stretch" style={{ gap: 12 }}>
-                      {/* Left: number + connector line */}
-                      <div className="flex flex-col items-center" style={{ width: 20 }}>
+                    <div key={key} className="flex items-stretch" style={{ gap: 16 }}>
+                      <div className="flex flex-col items-center" style={{ width: 24 }}>
                         <span
                           style={{
-                            width: 20,
-                            height: 20,
+                            width: 24,
+                            height: 24,
                             borderRadius: '50%',
                             border: '1.5px solid var(--accent-blue)',
                             background: 'transparent',
                             color: 'var(--accent-blue)',
-                            fontSize: 10,
+                            fontSize: 11,
                             fontWeight: 600,
                             display: 'flex',
                             alignItems: 'center',
@@ -574,8 +598,7 @@ export default function App() {
                           <div style={{ width: 1, flex: 1, background: 'var(--border)', margin: '4px 0' }} />
                         )}
                       </div>
-                      {/* Right: text */}
-                      <span style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5, paddingBottom: i < arr.length - 1 ? 14 : 0, paddingTop: 1 }}>
+                      <span style={{ fontSize: 15, color: 'var(--text-secondary)', lineHeight: 1.5, paddingBottom: i < arr.length - 1 ? 16 : 0, paddingTop: 2 }}>
                         {t(key)}
                       </span>
                     </div>
@@ -584,7 +607,7 @@ export default function App() {
               </div>
             ) : (
               /* Message stream */
-              <div style={{ maxWidth: 760, margin: '0 auto', padding: '20px 28px 32px' }}>
+              <div style={{ maxWidth: 760, margin: '0 auto', padding: '24px 28px 32px' }}>
                 {state.messages.map((item, i) => {
                   if (item.type === 'user') return <UserMessage key={i} content={item.content} />;
                   if (item.type === 'divider') return <RoleDivider key={i} agent={item.agent} />;
@@ -612,13 +635,12 @@ export default function App() {
                   }
                   return null;
                 })}
-                {/* Loading indicator: shows when running but no agent is streaming and no options waiting */}
                 {state.flowStatus === 'running' && !state.messages.some(
                   (m) => m.type === 'message' && m.status === 'running'
                 ) && !state.messages.some(
                   (m) => m.type === 'options' && !m.selected
                 ) && (
-                  <div className="flex items-center" style={{ gap: 4, padding: '14px 0', marginLeft: 50 }}>
+                  <div className="flex items-center" style={{ gap: 4, padding: '16px 0', marginLeft: 50 }}>
                     {[0, 1, 2].map((i) => (
                       <span
                         key={i}
@@ -627,8 +649,8 @@ export default function App() {
                           height: 6,
                           borderRadius: '50%',
                           background: 'var(--accent-blue)',
-                          opacity: 0.6,
-                          animation: `dot-bounce 1.2s ${i * 0.2}s infinite ease-in-out`,
+                          opacity: 0.5,
+                          animation: `fadeIn 0.5s ease ${i * 0.15}s infinite alternate`,
                         }}
                       />
                     ))}
@@ -646,13 +668,13 @@ export default function App() {
             <div
               className="flex items-center justify-center"
               style={{
-                padding: '10px 24px',
+                padding: '12px 24px',
                 borderTop: '1px solid var(--border)',
                 background: 'var(--bg-secondary)',
                 flexShrink: 0,
               }}
             >
-              <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+              <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
                 {t('msg.ended')}
               </span>
             </div>
@@ -662,4 +684,3 @@ export default function App() {
     </div>
   );
 }
-

@@ -14,16 +14,15 @@ interface Props {
 
 const AVATAR_STYLES: Record<string, { bg: string; border: string }> = {
   'Senior Product Manager': { bg: 'var(--agent-pm-bg)', border: 'var(--agent-pm-border)' },
-  'Senior Tech Lead': { bg: 'var(--agent-dev-bg)', border: 'var(--agent-dev-border)' },
-  'Product Designer': { bg: 'var(--agent-des-bg)', border: 'var(--agent-des-border)' },
+  'Senior Tech Lead': { bg: 'var(--agent-tl-bg)', border: 'var(--agent-tl-border)' },
+  'Product Designer': { bg: 'var(--agent-designer-bg)', border: 'var(--agent-designer-border)' },
 };
 
 export function ChatMessage({ agent, status, content }: Props) {
-  const config = AGENT_CONFIG[agent] || { avatar: '🤖', color: 'var(--text-muted)', crewTagKey: '', shortNameKey: '' };
+  const config = AGENT_CONFIG[agent] || { initials: 'AI', color: 'var(--text-muted)', crewTagKey: '', shortNameKey: '' };
   const shortName = config.shortNameKey ? t(config.shortNameKey) : agent;
-  const avatarStyle = AVATAR_STYLES[agent] || { bg: 'rgba(91,147,245,0.08)', border: 'rgba(91,147,245,0.18)' };
+  const avatarStyle = AVATAR_STYLES[agent] || { bg: 'rgba(10,132,255,0.08)', border: 'rgba(10,132,255,0.18)' };
 
-  // Debounced content for markdown rendering
   const [rendered, setRendered] = useState(content);
   useEffect(() => {
     if (status === 'completed') {
@@ -38,74 +37,40 @@ export function ChatMessage({ agent, status, content }: Props) {
   const isRunning = status === 'running';
 
   return (
-    <div className="flex animate-fade-in-up" style={{ gap: 12, padding: '14px 0' }}>
+    <div className="flex animate-fade-in-up" style={{ gap: 12, padding: '16px 0' }}>
       {/* ─── Avatar ─── */}
       <div style={{ flexShrink: 0 }}>
-  {isRunning ? (
-    /* Spinning ring wrapper → inner avatar counter-rotates */
-    <div
-      style={{
-        width: 42,
-        height: 42,
-        borderRadius: '50%',
-        border: '2px solid transparent',
-        borderTopColor: config.color,
-        animation: 'avatar-spin 1s linear infinite',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        boxShadow: '0 4px 12px rgba(99, 150, 245, 0.15)',
-      }}
-    >
-      <div
-        style={{
-          width: 34,
-          height: 34,
-          borderRadius: '50%',
-          background: avatarStyle.bg,
-          border: `1px solid ${avatarStyle.border}`,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: 17,
-          animation: 'avatar-spin 1s linear infinite reverse',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-        }}
-      >
-        {config.avatar}
-      </div>
-    </div>
-  ) : (
-    <div
-      style={{
-        width: 38,
-        height: 38,
-        borderRadius: '50%',
-        background: avatarStyle.bg,
-        border: `1px solid ${avatarStyle.border}`,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontSize: 18,
-        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-      }}
-    >
-      {config.avatar}
-    </div>
-  )}
+        <div
+          style={{
+            width: 40,
+            height: 40,
+            borderRadius: '50%',
+            background: avatarStyle.bg,
+            border: `1px solid ${avatarStyle.border}`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: 14,
+            fontWeight: 700,
+            color: config.color,
+            boxShadow: 'var(--shadow-sm)',
+          }}
+        >
+          {config.initials}
+        </div>
       </div>
 
       {/* ─── Body ─── */}
       <div style={{ flex: 1, minWidth: 0 }}>
         {/* Meta row */}
-        <div className="flex items-baseline" style={{ gap: 8, marginBottom: 5 }}>
+        <div className="flex items-baseline" style={{ gap: 8, marginBottom: 6 }}>
           <span style={{ fontSize: 13, fontWeight: 600, color: config.color }}>{shortName}</span>
           {crewTag && (
             <span
               style={{
-                fontSize: 10,
-                padding: '1px 7px',
-                borderRadius: 3,
+                fontSize: 12,
+                padding: '2px 8px',
+                borderRadius: 'var(--radius-xs)',
                 background: 'var(--bg-tertiary)',
                 color: 'var(--text-muted)',
               }}
@@ -118,13 +83,12 @@ export function ChatMessage({ agent, status, content }: Props) {
         {/* Content bubble */}
         <div
           style={{
-            background: 'var(--bg-secondary)',
-            border: '1px solid var(--border)',
-            borderLeft: `3px solid ${config.color}`,
-            borderRadius: '2px 10px 10px 10px',
-            padding: '14px 16px',
-            fontSize: 13,
-            lineHeight: 1.75,
+            background: '#2d2d2d',
+            borderRadius: 14,
+            padding: '16px 18px',
+            fontSize: 15,
+            lineHeight: 1.5,
+            boxShadow: 'var(--shadow-sm)',
           }}
         >
           {rendered ? (
@@ -133,10 +97,10 @@ export function ChatMessage({ agent, status, content }: Props) {
                 remarkPlugins={[remarkGfm, remarkBreaks]}
                 rehypePlugins={[rehypeRaw]}
                 components={{
-                  h1: ({ children }) => <h1 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', margin: '14px 0 6px' }}>{children}</h1>,
-                  h2: ({ children }) => <h2 style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', margin: '14px 0 5px' }}>{children}</h2>,
-                  h3: ({ children }) => <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)', margin: '10px 0 4px' }}>{children}</h3>,
-                  h4: ({ children }) => <h4 style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', margin: '10px 0 3px' }}>{children}</h4>,
+                  h1: ({ children }) => <h1 style={{ fontSize: 28, fontWeight: 700, color: 'var(--text-primary)', margin: '16px 0 8px' }}>{children}</h1>,
+                  h2: ({ children }) => <h2 style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-primary)', margin: '14px 0 6px' }}>{children}</h2>,
+                  h3: ({ children }) => <h3 style={{ fontSize: 18, fontWeight: 600, color: 'var(--text-primary)', margin: '12px 0 5px' }}>{children}</h3>,
+                  h4: ({ children }) => <h4 style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)', margin: '10px 0 4px' }}>{children}</h4>,
                   p: ({ children }) => <p style={{ color: 'var(--text-secondary)', margin: '4px 0' }}>{children}</p>,
                   ul: ({ children }) => <ul style={{ color: 'var(--text-secondary)', listStyle: 'none', padding: 0, margin: '4px 0' }}>{children}</ul>,
                   ol: ({ children }) => <ol style={{ color: 'var(--text-secondary)', paddingLeft: 18, margin: '4px 0' }}>{children}</ol>,
@@ -148,25 +112,25 @@ export function ChatMessage({ agent, status, content }: Props) {
                   ),
                   strong: ({ children }) => <strong style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{children}</strong>,
                   code: ({ children }) => (
-                    <code style={{ padding: '1px 5px', borderRadius: 4, fontSize: 12, background: 'var(--bg-tertiary)', color: 'var(--accent-amber)' }}>
+                    <code style={{ padding: '1px 5px', borderRadius: 4, fontSize: 13, background: 'var(--bg-tertiary)', color: 'var(--accent-amber)' }}>
                       {children}
                     </code>
                   ),
                   table: ({ children }) => (
                     <div style={{ overflowX: 'auto', margin: '8px 0' }}>
-                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>{children}</table>
+                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>{children}</table>
                     </div>
                   ),
                   thead: ({ children }) => <thead style={{ borderBottom: '1.5px solid var(--border)' }}>{children}</thead>,
                   th: ({ children }) => <th style={{ padding: '6px 10px', textAlign: 'left', color: 'var(--text-primary)', fontWeight: 600, whiteSpace: 'nowrap' }}>{children}</th>,
-                  td: ({ children }) => <td style={{ padding: '5px 10px', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border-light)' }}>{children}</td>,
+                  td: ({ children }) => <td style={{ padding: '5px 10px', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border)' }}>{children}</td>,
                 }}
               >
                 {rendered}
               </ReactMarkdown>
             </div>
           ) : (
-            <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>{t('msg.thinking')}</span>
+            <span style={{ color: 'var(--text-muted)', fontSize: 14 }}>{t('msg.thinking')}</span>
           )}
         </div>
       </div>
@@ -175,7 +139,7 @@ export function ChatMessage({ agent, status, content }: Props) {
 }
 
 
-// ─── Options card (A/B/C buttons + inline input + done) ───
+// ─── Options card ───
 
 interface OptionsCardProps {
   choices: { key: string; text: string }[];
@@ -188,7 +152,6 @@ export function OptionsCard({ choices, selected, onSelect, onDone }: OptionsCard
   const [customText, setCustomText] = useState('');
   const [expanded, setExpanded] = useState(!selected);
 
-  // Auto-collapse after selection
   useEffect(() => {
     if (selected) setExpanded(false);
   }, [selected]);
@@ -202,7 +165,6 @@ export function OptionsCard({ choices, selected, onSelect, onDone }: OptionsCard
 
   const isDisabled = !!selected;
 
-  // After selection: collapse to show only selected item with expand toggle
   if (isDisabled && !expanded) {
     const selectedChoice = selected === 'custom'
       ? { key: '✏️', text: customText }
@@ -216,19 +178,20 @@ export function OptionsCard({ choices, selected, onSelect, onDone }: OptionsCard
           className="cursor-pointer flex items-center"
           style={{
             gap: 6,
-            padding: '4px 10px',
-            borderRadius: 6,
-            border: '1px solid var(--border-light)',
-            background: 'transparent',
-            color: 'var(--text-muted)',
-            fontSize: 11,
+            padding: '6px 12px',
+            borderRadius: 'var(--radius-md)',
+            border: '1px solid var(--border)',
+            background: 'var(--bg-secondary)',
+            color: 'var(--text-secondary)',
+            fontSize: 12,
             fontFamily: 'inherit',
             fontWeight: 400,
             cursor: 'pointer',
             maxWidth: '70%',
+            transition: 'background-color 0.2s ease, opacity 0.2s ease',
           }}
         >
-          <span style={{ fontSize: 10, flexShrink: 0 }}>{selectedChoice?.key || '?'}.</span>
+          <span style={{ fontSize: 12, flexShrink: 0 }}>{selectedChoice?.key || '?'}</span>
           <span style={{ opacity: 0.7, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{(selectedChoice?.text || '').replace(/\*\*(.+?)\*\*/g, '$1')}</span>
           <span style={{ fontSize: 10, flexShrink: 0, opacity: 0.5 }}>▾</span>
         </button>
@@ -238,20 +201,19 @@ export function OptionsCard({ choices, selected, onSelect, onDone }: OptionsCard
 
   return (
     <div className="animate-fade-in-up" style={{ padding: isDisabled ? '4px 0 8px' : '8px 0 12px', marginLeft: 50 }}>
-      <div className="flex flex-col" style={{ gap: isDisabled ? 6 : 8 }}>
-        {/* Collapse toggle after selection */}
+      <div className="flex flex-col" style={{ gap: isDisabled ? 8 : 10 }}>
         {isDisabled && (
           <button
             onClick={() => setExpanded(false)}
             className="cursor-pointer"
             style={{
               alignSelf: 'flex-end',
-              padding: '2px 8px',
-              borderRadius: 4,
+              padding: '4px 10px',
+              borderRadius: 'var(--radius-xs)',
               border: 'none',
               background: 'transparent',
-              color: 'var(--text-muted)',
-              fontSize: 10,
+              color: 'var(--text-secondary)',
+              fontSize: 12,
               fontFamily: 'inherit',
               cursor: 'pointer',
             }}
@@ -262,7 +224,6 @@ export function OptionsCard({ choices, selected, onSelect, onDone }: OptionsCard
 
         {choices.map((c) => {
           const isSelected = selected === c.key;
-          // After selection: all items use muted styling
           const muted = isDisabled;
           return (
             <button
@@ -273,38 +234,38 @@ export function OptionsCard({ choices, selected, onSelect, onDone }: OptionsCard
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: 10,
-                padding: muted ? '7px 12px' : '10px 14px',
-                borderRadius: 10,
+                gap: 12,
+                padding: muted ? '10px 16px' : '12px 16px',
+                borderRadius: 'var(--radius-md)',
                 border: isSelected && !muted
                   ? '1.5px solid var(--accent-blue)'
-                  : '1px solid var(--border-light)',
+                  : '1px solid var(--border)',
                 background: isSelected && !muted
-                  ? 'rgba(91, 147, 245, 0.08)'
-                  : 'var(--bg-secondary)',
+                  ? 'rgba(10, 132, 255, 0.08)'
+                  : '#3a3a3c',
                 color: muted
                   ? isSelected ? 'var(--text-secondary)' : 'var(--text-muted)'
                   : isSelected ? 'var(--accent-blue)' : 'var(--text-secondary)',
-                fontSize: muted ? 12 : 13,
+                fontSize: muted ? 13 : 14,
                 fontFamily: 'inherit',
                 fontWeight: isSelected ? 500 : 400,
                 textAlign: 'left',
                 cursor: isDisabled ? 'default' : 'pointer',
                 opacity: muted && !isSelected ? 0.4 : muted ? 0.85 : 1,
-                transition: 'all 0.15s ease',
+                transition: 'opacity 0.2s ease, background-color 0.2s ease',
               }}
             >
               <span
                 style={{
-                  width: muted ? 18 : 22,
-                  height: muted ? 18 : 22,
+                  width: muted ? 20 : 24,
+                  height: muted ? 20 : 24,
                   borderRadius: '50%',
                   border: isSelected && !muted
                     ? '2px solid var(--accent-blue)'
                     : '1.5px solid var(--border)',
                   background: isSelected && !muted ? 'var(--accent-blue)' : 'transparent',
                   color: isSelected && !muted ? '#fff' : 'var(--text-muted)',
-                  fontSize: 11,
+                  fontSize: 12,
                   fontWeight: 700,
                   display: 'flex',
                   alignItems: 'center',
@@ -334,11 +295,11 @@ export function OptionsCard({ choices, selected, onSelect, onDone }: OptionsCard
           <div
             className="flex items-center"
             style={{
-              gap: 8,
-              padding: '6px 14px',
-              borderRadius: 10,
-              border: '1px dashed var(--border-light)',
-              background: 'var(--bg-tertiary)',
+              gap: 10,
+              padding: '10px 16px',
+              borderRadius: 'var(--radius-md)',
+              border: '1px dashed var(--border)',
+              background: 'var(--bg-secondary)',
             }}
           >
             <span style={{ fontSize: 14, color: 'var(--text-muted)', flexShrink: 0 }}>✏️</span>
@@ -353,7 +314,7 @@ export function OptionsCard({ choices, selected, onSelect, onDone }: OptionsCard
                 border: 'none',
                 background: 'transparent',
                 color: 'var(--text-primary)',
-                fontSize: 13,
+                fontSize: 14,
                 fontFamily: 'inherit',
                 outline: 'none',
               }}
@@ -363,15 +324,16 @@ export function OptionsCard({ choices, selected, onSelect, onDone }: OptionsCard
                 onClick={handleCustomSubmit}
                 className="cursor-pointer"
                 style={{
-                  padding: '4px 10px',
-                  borderRadius: 6,
+                  padding: '6px 12px',
+                  borderRadius: 'var(--radius-sm)',
                   border: 'none',
-                  background: 'var(--accent-blue)',
+                  background: '#0A84FF',
                   color: '#fff',
-                  fontSize: 11,
+                  fontSize: 12,
                   fontWeight: 600,
                   fontFamily: 'inherit',
                   cursor: 'pointer',
+                  transition: 'opacity 0.2s ease',
                 }}
               >
                 {t('chat.send')}
@@ -382,20 +344,20 @@ export function OptionsCard({ choices, selected, onSelect, onDone }: OptionsCard
         {selected === 'custom' && (
           <div
             style={{
-              padding: '5px 12px',
-              borderRadius: 10,
-              border: '1px solid var(--border-light)',
+              padding: '8px 16px',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid var(--border)',
               background: 'var(--bg-secondary)',
-              fontSize: 12,
+              fontSize: 13,
               color: 'var(--text-secondary)',
               fontWeight: 400,
               display: 'flex',
               alignItems: 'center',
-              gap: 8,
+              gap: 10,
               opacity: 0.85,
             }}
           >
-            <span style={{ fontSize: 12 }}>✏️</span>
+            <span style={{ fontSize: 13 }}>✏️</span>
             <span>{customText || '...'}</span>
           </div>
         )}
@@ -408,40 +370,40 @@ export function OptionsCard({ choices, selected, onSelect, onDone }: OptionsCard
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: 8,
-              padding: '9px 14px',
-              borderRadius: 10,
-              border: '1px solid var(--border-light)',
-              background: 'var(--bg-secondary)',
-              color: 'var(--text-muted)',
-              fontSize: 12,
+              gap: 10,
+              padding: '10px 16px',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid var(--border)',
+              background: '#3a3a3c',
+              color: 'var(--text-secondary)',
+              fontSize: 13,
               fontFamily: 'inherit',
               cursor: 'pointer',
               marginTop: 4,
+              transition: 'opacity 0.2s ease, background-color 0.2s ease',
             }}
           >
-            <span style={{ fontSize: 13 }}>✓</span>
+            <span style={{ fontSize: 14 }}>✓</span>
             <span>{t('options.done')}</span>
           </button>
         )}
-        {/* Done selected (muted) */}
         {isDisabled && selected === 'done' && (
           <div
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: 8,
-              padding: '5px 12px',
-              borderRadius: 10,
-              border: '1px solid var(--border-light)',
+              gap: 10,
+              padding: '8px 16px',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid var(--border)',
               background: 'var(--bg-secondary)',
               color: 'var(--text-secondary)',
-              fontSize: 12,
+              fontSize: 13,
               opacity: 0.85,
               marginTop: 4,
             }}
           >
-            <span style={{ fontSize: 12 }}>✓</span>
+            <span style={{ fontSize: 14 }}>✓</span>
             <span>{t('options.done')}</span>
           </div>
         )}
@@ -450,7 +412,7 @@ export function OptionsCard({ choices, selected, onSelect, onDone }: OptionsCard
   );
 }
 
-// ─── User message bubble (right-aligned) ───
+// ─── User message bubble ───
 
 interface UserMsgProps {
   content: string;
@@ -458,16 +420,16 @@ interface UserMsgProps {
 
 export function UserMessage({ content }: UserMsgProps) {
   return (
-    <div className="flex animate-fade-in-up" style={{ justifyContent: 'flex-end', padding: '10px 0' }}>
+    <div className="flex animate-fade-in-up" style={{ justifyContent: 'flex-end', padding: '12px 0' }}>
       <div
         style={{
           maxWidth: '78%',
-          padding: '9px 14px',
-          background: 'var(--accent-blue)',
+          padding: '10px 16px',
+          background: '#0A84FF',
           color: '#fff',
-          fontSize: 13,
-          lineHeight: 1.6,
-          borderRadius: '12px 12px 2px 12px',
+          fontSize: 15,
+          lineHeight: 1.5,
+          borderRadius: 14,
           wordBreak: 'break-word',
         }}
       >
